@@ -4,25 +4,21 @@ import os
 import aws_cdk as cdk
 
 from cdk_app.cdk_app_stack import CdkAppStack
+from cdk_app.observability_stack import ObservabilityStack
 
 
 app = cdk.App()
-CdkAppStack(app, "CdkAppStack",
-    # If you don't specify 'env', this stack will be environment-agnostic.
-    # Account/Region-dependent features and context lookups will not work,
-    # but a single synthesized template can be deployed anywhere.
 
-    # Uncomment the next line to specialize this stack for the AWS Account
-    # and Region that are implied by the current CLI configuration.
+# Define environment
+env = cdk.Environment(
+    account=os.getenv('CDK_DEFAULT_ACCOUNT', '529088281783'),
+    region=os.getenv('CDK_DEFAULT_REGION', 'us-east-1')
+)
 
-    #env=cdk.Environment(account=os.getenv('CDK_DEFAULT_ACCOUNT'), region=os.getenv('CDK_DEFAULT_REGION')),
+# Deploy observability stack
+ObservabilityStack(app, "ObservabilityStack", env=env)
 
-    # Uncomment the next line if you know exactly what Account and Region you
-    # want to deploy the stack to. */
-
-    #env=cdk.Environment(account='123456789012', region='us-east-1'),
-
-    # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
-    )
+# Original stack
+CdkAppStack(app, "CdkAppStack", env=env)
 
 app.synth()
