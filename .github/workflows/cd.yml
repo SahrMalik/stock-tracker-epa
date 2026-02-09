@@ -1,7 +1,9 @@
 name: Continuous Deployment
 
 on:
-  workflow_dispatch:  # Manual trigger only (disable auto-deploy until AWS role is configured)
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Also allow manual trigger
 
 jobs:
   deploy:
