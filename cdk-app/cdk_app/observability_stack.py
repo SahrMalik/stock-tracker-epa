@@ -3,6 +3,8 @@ from aws_cdk import (
     aws_logs as logs,
     aws_cloudwatch as cloudwatch,
     aws_sns as sns,
+    aws_sns_subscriptions as sns_subs,
+    aws_lambda as _lambda,
     aws_cloudwatch_actions as cw_actions,
     RemovalPolicy,
     Duration,
@@ -29,6 +31,26 @@ class ObservabilityStack(Stack):
             "AlertTopic",
             display_name="Stock Tracker Alerts",
             topic_name="stock-tracker-alerts",
+        )
+
+        # Lambda function for Slack notifications
+        notification_handler = _lambda.Function(
+            self, "NotificationHandler",
+            runtime=_lambda.Runtime.PYTHON_3_11,
+            handler="notification_handler.lambda_handler",
+            code=_lambda.Code.from_asset("../lambda"),
+            function_name="stock-notification-handler",
+            timeout=Duration.seconds(30),
+            memory_size=128,
+            environment={
+                "SLACK_WEBHOOK_URL": "placeholder",  # Update with real webhook URL
+            },
+            log_retention=logs.RetentionDays.ONE_WEEK,
+        )
+
+        # Subscribe Lambda to SNS topic
+        self.alert_topic.add_subscription(
+            sns_subs.LambdaSubscription(notification_handler)
         )
 
         # CloudWatch Dashboard
