@@ -1,9 +1,9 @@
 name: Continuous Deployment
 
+# DISABLED: Security team removes OIDC provider
+# Deploy manually using: cd cdk-app && cdk deploy --all
 on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:  # Also allow manual trigger
+  workflow_dispatch:  # Manual trigger only (disabled due to OIDC restrictions)
 
 jobs:
   deploy:
