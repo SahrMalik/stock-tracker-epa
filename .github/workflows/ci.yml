@@ -84,6 +84,11 @@ jobs:
           cd cdk-app
           pip install -r requirements.txt
       
+      - name: Build Lambda Layer
+        run: |
+          mkdir -p lambda-layer/python
+          pip install --platform manylinux2014_x86_64 --only-binary=:all: --python-version 311 yfinance -t lambda-layer/python
+      
       - name: CDK Synth
         run: |
           cd cdk-app
