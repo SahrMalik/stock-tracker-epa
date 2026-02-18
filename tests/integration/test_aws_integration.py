@@ -87,16 +87,17 @@ class TestDynamoDBIntegration:
     
     def test_store_anomaly_in_dynamodb(self):
         """Test storing anomaly in DynamoDB."""
+        from decimal import Decimal
         anomaly = {
             'ticker': 'AAPL',
             'timestamp': datetime.utcnow().isoformat(),
             'date': '2026-01-21',
             'anomaly_type': 'price',
-            'value': 160.0,
-            'baseline_mean': 150.0,
-            'baseline_std': 2.0,
-            'z_score': 5.0,
-            'threshold': 2.0,
+            'value': Decimal('160.0'),
+            'baseline_mean': Decimal('150.0'),
+            'baseline_std': Decimal('2.0'),
+            'z_score': Decimal('5.0'),
+            'threshold': Decimal('2.0'),
             'severity': 'high'
         }
         
@@ -117,6 +118,7 @@ class TestDynamoDBIntegration:
     
     def test_query_anomalies_by_ticker(self):
         """Test querying anomalies by ticker."""
+        from decimal import Decimal
         # Store multiple anomalies
         for i in range(3):
             anomaly = {
@@ -124,8 +126,8 @@ class TestDynamoDBIntegration:
                 'timestamp': f'2026-01-{i+1:02d}T10:00:00',
                 'date': f'2026-01-{i+1:02d}',
                 'anomaly_type': 'price',
-                'value': 160.0 + i,
-                'z_score': 5.0
+                'value': Decimal(str(160.0 + i)),
+                'z_score': Decimal('5.0')
             }
             self.table.put_item(Item=anomaly)
         

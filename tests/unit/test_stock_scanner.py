@@ -160,11 +160,13 @@ class TestDataFetching:
     """Test data fetching functions."""
     
     def test_fetch_stock_data_returns_correct_length(self):
-        """Test that fetch returns correct number of days."""
+        """Test that fetch returns correct number of days (trading days only)."""
         data = fetch_stock_data_simple('AAPL', days=30)
         
         assert data is not None
-        assert len(data) == 30
+        # Yahoo Finance returns trading days only (excludes weekends/holidays)
+        # So we expect around 20-26 days for 30 calendar days
+        assert 20 <= len(data) <= 30
     
     def test_fetch_stock_data_structure(self):
         """Test that fetched data has correct structure."""
