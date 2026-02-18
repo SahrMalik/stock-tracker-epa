@@ -45,3 +45,7 @@ logs/
 .coverage
 htmlcov/
 notes/
+
+# misc
+RUNBOOK.md
+GITHUB_ACTIONS_SETUP.md
