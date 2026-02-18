@@ -28,6 +28,14 @@ class LambdaStack(Stack):
             retention_period=Duration.days(14),  # Keep failed messages for 14 days
         )
 
+        # Lambda Layer for yfinance dependency
+        yfinance_layer = _lambda.LayerVersion(
+            self, "YFinanceLayer",
+            code=_lambda.Code.from_asset("../lambda-layer"),
+            compatible_runtimes=[_lambda.Runtime.PYTHON_3_11],
+            description="yfinance library for stock data",
+        )
+
         # Lambda function for stock scanning
         stock_scanner = _lambda.Function(
             self, "StockScanner",
@@ -44,6 +52,7 @@ class LambdaStack(Stack):
             retry_attempts=2,
             dead_letter_queue=dlq,
             reserved_concurrent_executions=5,  # Limit concurrency to control costs
+            layers=[yfinance_layer],
         )
 
         # Grant Lambda permission to read from Parameter Store

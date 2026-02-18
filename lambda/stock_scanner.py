@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import urllib3
 from statistics import mean, stdev
 import time
+import yfinance as yf
 
 # Configure structured logging
 logger = logging.getLogger()
@@ -341,36 +342,44 @@ This represents a {abs(anomaly['z_score']):.1f} standard deviation move.
 
 def fetch_stock_data_simple(ticker, days=30):
     """
-    Fetch stock data using a simple approach.
-    For now, generates mock data. In production, integrate with real API.
+    Fetch real stock data from Yahoo Finance.
     """
     try:
-        logger.info(f"Generating mock data for {ticker}")
+        logger.info(f"Fetching real data for {ticker} from Yahoo Finance")
         
-        # Generate mock data for last 30 days
+        # Calculate date range
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days + 10)  # Extra days to account for weekends
+        
+        # Fetch data using yfinance
+        stock = yf.Ticker(ticker)
+        hist = stock.history(start=start_date.strftime('%Y-%m-%d'), 
+                            end=end_date.strftime('%Y-%m-%d'))
+        
+        if hist.empty:
+            logger.error(f"No data returned for {ticker}")
+            return None
+        
+        # Convert to our format
         data = []
-        base_price = 150.0  # Mock base price for AAPL
-        
-        for i in range(days):
-            date = datetime.now() - timedelta(days=days-i)
-            # Simple random walk for mock data
-            price_change = (hash(f"{ticker}{date.date()}") % 10 - 5) * 0.5
-            price = base_price + price_change
-            
+        for date, row in hist.iterrows():
             data.append({
                 'date': date.strftime('%Y-%m-%d'),
-                'open': round(price - 0.5, 2),
-                'high': round(price + 1.0, 2),
-                'low': round(price - 1.0, 2),
-                'close': round(price, 2),
-                'volume': (hash(f"{ticker}{date.date()}volume") % 1000000) + 50000000
+                'open': round(float(row['Open']), 2),
+                'high': round(float(row['High']), 2),
+                'low': round(float(row['Low']), 2),
+                'close': round(float(row['Close']), 2),
+                'volume': int(row['Volume'])
             })
         
-        logger.info(f"Generated {len(data)} mock data points for {ticker}")
+        # Get last N days
+        data = data[-days:]
+        
+        logger.info(f"Fetched {len(data)} real data points for {ticker}")
         return data
         
     except Exception as e:
-        logger.error(f"Error generating data for {ticker}: {str(e)}")
+        logger.error(f"Error fetching data for {ticker}: {str(e)}")
         return None
 
 def store_raw_data(ticker, data):
@@ -498,35 +507,3 @@ This represents a {abs(anomaly['z_score']):.1f} standard deviation move.
 """
     return message.strip()
 
-def fetch_stock_data_simple(ticker, days=30):
-    """
-    Fetch stock data using a simple approach.
-    For now, generates mock data. In production, integrate with real API.
-    """
-    try:
-        logger.info(f"Generating mock data for {ticker}")
-        
-        # Generate mock data for last 30 days
-        data = []
-        base_price = 150.0
-        
-        for i in range(days):
-            date = datetime.now() - timedelta(days=days-i)
-            price_change = (hash(f"{ticker}{date.date()}") % 10 - 5) * 0.5
-            price = base_price + price_change
-            
-            data.append({
-                'date': date.strftime('%Y-%m-%d'),
-                'open': round(price - 0.5, 2),
-                'high': round(price + 1.0, 2),
-                'low': round(price - 1.0, 2),
-                'close': round(price, 2),
-                'volume': (hash(f"{ticker}{date.date()}volume") % 1000000) + 50000000
-            })
-        
-        logger.info(f"Generated {len(data)} mock data points for {ticker}")
-        return data
-        
-    except Exception as e:
-        logger.error(f"Error generating data for {ticker}: {str(e)}")
-        return None
