@@ -2,6 +2,7 @@ import json
 import logging
 import boto3
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -52,12 +53,23 @@ def lambda_handler(event, context):
 def list_anomalies():
     """List recent anomalies (last 7 days)."""
     try:
-        # For now, return empty list (will populate in Week 7)
-        # In production, would scan table with date filter
+        # Scan table for all anomalies (limit to recent ones)
+        response_data = table.scan(Limit=100)
+        items = response_data.get('Items', [])
+        
+        # Convert Decimal to float for JSON serialization
+        anomalies = []
+        for item in items:
+            anomaly = {k: float(v) if isinstance(v, Decimal) else v for k, v in item.items()}
+            anomalies.append(anomaly)
+        
+        # Sort by timestamp descending (most recent first)
+        anomalies.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        
         return response(200, {
-            'anomalies': [],
-            'count': 0,
-            'message': 'No anomalies detected yet'
+            'anomalies': anomalies,
+            'count': len(anomalies),
+            'message': f'Found {len(anomalies)} anomalies' if anomalies else 'No anomalies detected yet'
         })
     except Exception as e:
         logger.error(f"Error listing anomalies: {str(e)}")
