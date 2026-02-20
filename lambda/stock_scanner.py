@@ -7,6 +7,7 @@ import urllib3
 from statistics import mean, stdev
 import time
 import yfinance as yf
+from decimal import Decimal
 
 # Configure structured logging
 logger = logging.getLogger()
@@ -189,7 +190,9 @@ def store_anomalies_with_retry(anomalies):
     """Store detected anomalies in DynamoDB with retry logic."""
     for anomaly in anomalies:
         def store():
-            anomalies_table.put_item(Item=anomaly)
+            # Convert float values to Decimal for DynamoDB
+            item = {k: Decimal(str(v)) if isinstance(v, float) else v for k, v in anomaly.items()}
+            anomalies_table.put_item(Item=item)
             logger.info(f"Stored {anomaly['anomaly_type']} anomaly for {anomaly['ticker']}")
         
         try:
