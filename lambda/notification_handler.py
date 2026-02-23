@@ -2,11 +2,13 @@ import json
 import logging
 import os
 import urllib3
+import boto3
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 http = urllib3.PoolManager()
+ssm = boto3.client('ssm')
 
 def lambda_handler(event, context):
     """
@@ -14,8 +16,13 @@ def lambda_handler(event, context):
     Receives SNS messages and forwards to Slack webhook.
     """
     try:
-        # Get Slack webhook URL from environment variable
-        slack_webhook_url = os.environ.get('SLACK_WEBHOOK_URL', '')
+        # Get Slack webhook URL from Parameter Store
+        try:
+            response = ssm.get_parameter(Name='/stock-tracker/slack-webhook', WithDecryption=True)
+            slack_webhook_url = response['Parameter']['Value']
+        except Exception as e:
+            logger.warning(f"Failed to get Slack webhook from Parameter Store: {str(e)}")
+            return {'statusCode': 200, 'body': 'Webhook not configured'}
         
         if not slack_webhook_url:
             logger.warning("SLACK_WEBHOOK_URL not configured, skipping notification")

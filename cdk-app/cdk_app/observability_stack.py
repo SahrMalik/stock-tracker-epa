@@ -6,6 +6,7 @@ from aws_cdk import (
     aws_sns_subscriptions as sns_subs,
     aws_lambda as _lambda,
     aws_cloudwatch_actions as cw_actions,
+    aws_iam as iam,
     RemovalPolicy,
     Duration,
 )
@@ -42,10 +43,17 @@ class ObservabilityStack(Stack):
             function_name="stock-notification-handler",
             timeout=Duration.seconds(30),
             memory_size=128,
-            environment={
-                "SLACK_WEBHOOK_URL": "placeholder",  # Update with real webhook URL
-            },
             log_retention=logs.RetentionDays.ONE_WEEK,
+        )
+        
+        # Grant permission to read Slack webhook from Parameter Store
+        notification_handler.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["ssm:GetParameter"],
+                resources=[
+                    f"arn:aws:ssm:{self.region}:{self.account}:parameter/stock-tracker/slack-webhook"
+                ],
+            )
         )
 
         # Subscribe Lambda to SNS topic
