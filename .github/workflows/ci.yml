@@ -51,11 +51,16 @@ jobs:
       
       - name: Install linting tools
         run: |
-          pip install flake8
+          pip install flake8 bandit
       
       - name: Run flake8
         run: |
           flake8 lambda/ --max-line-length=120 --ignore=E501,W503,E402,F401 --exclude=__pycache__ || echo "Linting completed with warnings"
+        continue-on-error: true
+      
+      - name: Run bandit security scan
+        run: |
+          bandit -r lambda/ cdk-app/cdk_app/ || echo "Security scan completed"
         continue-on-error: true
 
   cdk-synth:
