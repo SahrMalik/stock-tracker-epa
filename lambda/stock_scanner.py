@@ -292,192 +292,70 @@ def detect_anomalies(ticker, data, threshold): # Detect anomalies using Z-score 
         logger.error(f"Error detecting anomalies: {str(e)}") # Logs error
         return [] # Returns empty list instead of crashing
 
-def format_alert_message(anomaly):
+def format_alert_message(anomaly): # Formats anomaly into a human-readable message for Slack/SNS alerts
     """Format anomaly data into readable alert message."""
-    direction = "increased" if anomaly['z_score'] > 0 else "decreased"
+    direction = "increased" if anomaly['z_score'] > 0 else "decreased" # Determines if value went up or down
     
     message = f"""
-🚨 Anomaly Detected for {anomaly['ticker']}
+    🚨 Anomaly Detected for {anomaly['ticker']}
 
-Type: {anomaly['anomaly_type'].upper()}
-Severity: {anomaly['severity'].upper()}
-Date: {anomaly['date']}
+    Type: {anomaly['anomaly_type'].upper()} 
+    Severity: {anomaly['severity'].upper()}
+    Date: {anomaly['date']}
 
-Current Value: {anomaly['value']:,.2f}
-Baseline Mean: {anomaly['baseline_mean']:,.2f}
-Standard Deviation: {anomaly['baseline_std']:,.2f}
+    Current Value: {anomaly['value']:,.2f}
+    Baseline Mean: {anomaly['baseline_mean']:,.2f}
+    Standard Deviation: {anomaly['baseline_std']:,.2f}
 
-Z-Score: {anomaly['z_score']} (threshold: {anomaly['threshold']})
+    Z-Score: {anomaly['z_score']} (threshold: {anomaly['threshold']})
 
-The {anomaly['anomaly_type']} has {direction} significantly beyond normal levels.
-This represents a {abs(anomaly['z_score']):.1f} standard deviation move.
-"""
+    The {anomaly['anomaly_type']} has {direction} significantly beyond normal levels.
+    This represents a {abs(anomaly['z_score']):.1f} standard deviation move.
+    """
     return message.strip()
 
-def fetch_stock_data_simple(ticker, days=30):
+def fetch_stock_data_simple(ticker, days=30): # Fetches real stock data from Yahoo Finance
     """
     Fetch real stock data from Yahoo Finance.
     """
     try:
-        logger.info(f"Fetching real data for {ticker} from Yahoo Finance")
+        logger.info(f"Fetching real data for {ticker} from Yahoo Finance") # Logs start of data fetch to CloudWatch
         
         # Calculate date range
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days + 10)  # Extra days to account for weekends
         
         # Fetch data using yfinance
-        stock = yf.Ticker(ticker)
-        hist = stock.history(start=start_date.strftime('%Y-%m-%d'), 
+        stock = yf.Ticker(ticker) # Creates a Yahoo Finance ticker obkect 
+        hist = stock.history(start=start_date.strftime('%Y-%m-%d'), #Fetches historical daily data between the start and end dates. Returns a pandas dataframe
                             end=end_date.strftime('%Y-%m-%d'))
         
         if hist.empty:
             logger.error(f"No data returned for {ticker}")
-            return None
+            return None # If Yahoo Finance returns nothing, logs error and returns none
         
         # Convert to our format
-        data = []
-        for date, row in hist.iterrows():
+        data = [] # Empty list to store converted data
+        for date, row in hist.iterrows(): # Loops through each row of the pandas dataframe. date is the trading date, row contains the proce/volume data
             data.append({
-                'date': date.strftime('%Y-%m-%d'),
+                'date': date.strftime('%Y-%m-%d'), # Converts date to a string format like 2026-03-03
                 'open': round(float(row['Open']), 2),
                 'high': round(float(row['High']), 2),
                 'low': round(float(row['Low']), 2),
-                'close': round(float(row['Close']), 2),
-                'volume': int(row['Volume'])
+                'close': round(float(row['Close']), 2), # Extracts rach price, converts from pandas type to Python float, rounds to 2 decimal places
+                'volume': int(row['Volume']) # Converts volume to integer 
             })
         
         # Get last N days
         data = data[-days:]
         
-        logger.info(f"Fetched {len(data)} real data points for {ticker}")
+        logger.info(f"Fetched {len(data)} real data points for {ticker}") # Logs how many days were fetched
         return data
         
     except Exception as e:
-        logger.error(f"Error fetching data for {ticker}: {str(e)}")
+        logger.error(f"Error fetching data for {ticker}: {str(e)}") # If Yahoo Finance fails, logs the error and returns None instead of crashing
         return None
 
-def store_raw_data(ticker, data):
-    """Store raw stock data in S3."""
-    try:
-        bucket_name = os.environ.get('S3_BUCKET', 'stock-scan-data-529088281783')
-        timestamp = datetime.utcnow().strftime('%Y%m%d-%H%M%S')
-        s3_key = f"raw-data/{ticker}/{timestamp}.json"
-        
-        s3.put_object(
-            Bucket=bucket_name,
-            Key=s3_key,
-            Body=json.dumps(data, indent=2),
-            ContentType='application/json'
-        )
-        
-        logger.info(f"Stored raw data in S3: s3://{bucket_name}/{s3_key}")
-        return s3_key
-        
-    except Exception as e:
-        logger.error(f"Error storing data in S3: {str(e)}")
-        raise
-
-def get_parameter(name, default):
-    """Get parameter from Parameter Store with fallback to default."""
-    try:
-        response = ssm.get_parameter(Name=name)
-        return response['Parameter']['Value']
-    except Exception as e:
-        logger.warning(f"Failed to get parameter {name}: {str(e)}, using default: {default}")
-        return default
 
 
-def detect_anomalies(ticker, data, threshold):
-    """
-    Detect anomalies using Z-score analysis.
-    Uses 20-day baseline for comparison.
-    """
-    try:
-        if len(data) < 21:
-            logger.warning("Not enough data for anomaly detection (need 21+ days)")
-            return []
-        
-        # Use last 20 days as baseline, current day for detection
-        baseline_data = data[-21:-1]
-        current_data = data[-1]
-        
-        # Calculate baseline statistics
-        baseline_prices = [d['close'] for d in baseline_data]
-        baseline_volumes = [d['volume'] for d in baseline_data]
-        
-        price_mean = mean(baseline_prices)
-        price_std = stdev(baseline_prices)
-        volume_mean = mean(baseline_volumes)
-        volume_std = stdev(baseline_volumes)
-        
-        # Calculate Z-scores
-        price_zscore = (current_data['close'] - price_mean) / price_std if price_std > 0 else 0
-        volume_zscore = (current_data['volume'] - volume_mean) / volume_std if volume_std > 0 else 0
-        
-        logger.info(f"Z-scores - Price: {price_zscore:.2f}, Volume: {volume_zscore:.2f}")
-        
-        anomalies = []
-        
-        # Check for price anomaly
-        if abs(price_zscore) > threshold:
-            anomalies.append({
-                'ticker': ticker,
-                'timestamp': datetime.utcnow().isoformat(),
-                'date': current_data['date'],
-                'anomaly_type': 'price',
-                'value': current_data['close'],
-                'baseline_mean': round(price_mean, 2),
-                'baseline_std': round(price_std, 2),
-                'z_score': round(price_zscore, 2),
-                'threshold': threshold,
-                'severity': 'high' if abs(price_zscore) > threshold * 1.5 else 'medium'
-            })
-        
-        # Check for volume anomaly
-        if abs(volume_zscore) > threshold:
-            anomalies.append({
-                'ticker': ticker,
-                'timestamp': datetime.utcnow().isoformat(),
-                'date': current_data['date'],
-                'anomaly_type': 'volume',
-                'value': current_data['volume'],
-                'baseline_mean': int(volume_mean),
-                'baseline_std': int(volume_std),
-                'z_score': round(volume_zscore, 2),
-                'threshold': threshold,
-                'severity': 'high' if abs(volume_zscore) > threshold * 1.5 else 'medium'
-            })
-        
-        if anomalies:
-            logger.info(f"Detected {len(anomalies)} anomalies for {ticker}")
-        else:
-            logger.info(f"No anomalies detected for {ticker}")
-        
-        return anomalies
-        
-    except Exception as e:
-        logger.error(f"Error detecting anomalies: {str(e)}")
-        return []
-
-def format_alert_message(anomaly):
-    """Format anomaly data into readable alert message."""
-    direction = "increased" if anomaly['z_score'] > 0 else "decreased"
-    
-    message = f"""
-🚨 Anomaly Detected for {anomaly['ticker']}
-
-Type: {anomaly['anomaly_type'].upper()}
-Severity: {anomaly['severity'].upper()}
-Date: {anomaly['date']}
-
-Current Value: {anomaly['value']:,.2f}
-Baseline Mean: {anomaly['baseline_mean']:,.2f}
-Standard Deviation: {anomaly['baseline_std']:,.2f}
-
-Z-Score: {anomaly['z_score']} (threshold: {anomaly['threshold']})
-
-The {anomaly['anomaly_type']} has {direction} significantly beyond normal levels.
-This represents a {abs(anomaly['z_score']):.1f} standard deviation move.
-"""
-    return message.strip()
 
