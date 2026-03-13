@@ -23,19 +23,19 @@ env = cdk.Environment(
 # Deploy observability stack
 ObservabilityStack(app, "ObservabilityStack", env=env)
 
-# Deploy storage stack (Week 5 Day 1)
+# Deploy storage stack 
 StorageStack(app, "StorageStack", env=env)
 
-# Deploy secrets stack (Week 5 Day 2)
+# Deploy secrets stack 
 SecretsStack(app, "SecretsStack", env=env)
 
-# Deploy Lambda stack (Week 4)
+# Deploy Lambda stack 
 LambdaStack(app, "LambdaStack", env=env)
 
-# Deploy API stack (Week 6 Day 1)
+# Deploy API stack 
 ApiStack(app, "ApiStack", env=env)
 
-# Deploy dashboard stack (Week 9 Day 1)
+# Deploy dashboard stack 
 DashboardStack(app, "DashboardStack", env=env)
 
 # Original stack
