@@ -4,12 +4,12 @@ Tests anomaly detection logic, error handling, and data processing.
 """
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../lambda'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../lambda')) # Adds /lambda/ folder to Python's import path
 
-import pytest
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
-import json
+import pytest # Testing framework for running and organising tests
+from datetime import datetime, timedelta # Create test dates for mock stock data
+from unittest.mock import Mock, patch, MagicMock # Creates dummy objects that simulate real ones (e.g. fake AWS clients)
+import json # Parse JSON responses in tests
 
 # Import functions from Lambda
 from stock_scanner import (
@@ -28,17 +28,17 @@ class TestAnomalyDetection:
         # Create baseline data with some variance
         baseline = [
             {'date': f'2026-01-{i:02d}', 'close': 150.0 + (i % 5) * 0.5, 'volume': 50000000}
-            for i in range(1, 21)
+            for i in range(1, 21) # Creates 20 days of fake baseline stock data using a list comprehension. Price hovers around 150
         ]
         # Add current day with anomalous price
         current = {'date': '2026-01-21', 'close': 165.0, 'volume': 50000000}
         data = baseline + [current]
         
-        anomalies = detect_anomalies('AAPL', data, threshold=2.0)
+        anomalies = detect_anomalies('AAPL', data, threshold=2.0) # Calls function
         
         # Should detect price anomaly
-        assert len(anomalies) >= 1
-        price_anomalies = [a for a in anomalies if a['anomaly_type'] == 'price']
+        assert len(anomalies) >= 1 # Verifies at least one anomaly was detected
+        price_anomalies = [a for a in anomalies if a['anomaly_type'] == 'price'] # Filters only price anomalies
         assert len(price_anomalies) > 0
         price_anomaly = price_anomalies[0]
         assert price_anomaly['ticker'] == 'AAPL'
@@ -49,7 +49,7 @@ class TestAnomalyDetection:
         """Test detection of volume anomaly."""
         baseline = [
             {'date': f'2026-01-{i:02d}', 'close': 150.0, 'volume': 50000000 + (i % 5) * 100000}
-            for i in range(1, 21)
+            for i in range(1, 21) # Volume hovers around 50m
         ]
         # Add current day with very anomalous volume
         current = {'date': '2026-01-21', 'close': 150.0, 'volume': 150000000}
@@ -88,7 +88,7 @@ class TestAnomalyDetection:
         
         anomalies = detect_anomalies('AAPL', data, threshold=2.0)
         
-        # Should return empty list
+        # Should return empty list instead of crashing
         assert len(anomalies) == 0
     
     def test_severity_classification(self):
@@ -111,7 +111,7 @@ class TestAnomalyDetection:
 
 
 class TestAlertFormatting:
-    """Test alert message formatting."""
+    """Test alert message formatting that gets sent to SNS and then to Slack."""
     
     def test_format_price_anomaly_message(self):
         """Test formatting of price anomaly alert."""
@@ -127,7 +127,7 @@ class TestAlertFormatting:
             'threshold': 2.0
         }
         
-        message = format_alert_message(anomaly)
+        message = format_alert_message(anomaly) # Function that generates a human readable message
         
         assert 'AAPL' in message
         assert 'PRICE' in message
@@ -195,19 +195,19 @@ class TestRetryLogic:
     """Test retry with exponential backoff."""
     
     def test_retry_success_first_attempt(self):
-        """Test successful execution on first attempt."""
-        mock_func = Mock(return_value='success')
+        """Test successful execution on first attempt. No retries"""
+        mock_func = Mock(return_value='success') # Always returns success. Mock tracks how many times it was called
         
         result = retry_with_backoff(mock_func, max_retries=3)
         
         assert result == 'success'
-        assert mock_func.call_count == 1
+        assert mock_func.call_count == 1 # Verifies the function was only called once
     
     def test_retry_success_after_failures(self):
         """Test successful execution after retries."""
         mock_func = Mock(side_effect=[Exception('fail'), Exception('fail'), 'success'])
         
-        result = retry_with_backoff(mock_func, max_retries=3, initial_delay=0.01)
+        result = retry_with_backoff(mock_func, max_retries=3, initial_delay=0.01) # 0.01, 0.02, 0.04
         
         assert result == 'success'
         assert mock_func.call_count == 3
@@ -229,13 +229,13 @@ class TestErrorHandling:
         """Test anomaly detection with empty data."""
         anomalies = detect_anomalies('AAPL', [], threshold=2.0)
         
-        assert len(anomalies) == 0
+        assert len(anomalies) == 0 # Should return empty list and not fail
     
     def test_detect_anomalies_handles_none_data(self):
         """Test anomaly detection with None data."""
         anomalies = detect_anomalies('AAPL', None, threshold=2.0)
         
-        assert len(anomalies) == 0
+        assert len(anomalies) == 0 # Should handle None and return an empty list
 
 
 if __name__ == '__main__':
