@@ -1,14 +1,18 @@
 name: Continuous Deployment # Pipeline that deploys code to AWS
 
 on:
-  push:
-    branches: [ main ] # Triggers when code is pushed to main branch 
+  workflow_run: # CD triggers AFTER CI completes successfully
+    workflows: ["Continuous Integration"] # Waits for CI pipeline to pass
+    types:
+      - completed # Triggers when CI workflow finishes
+    branches: [ main ]
   workflow_dispatch:  # Also allow manual trigger - useful for re-deploying without making a code change
 
 jobs:
   deploy:
     name: Deploy to AWS
     runs-on: ubuntu-latest # Fresh Ubuntu runner from GitHub
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }} # Only deploy if CI passed or manually triggered
     
     steps:
       - name: Checkout code
