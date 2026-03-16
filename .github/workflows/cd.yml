@@ -1,18 +1,18 @@
-name: Continuous Deployment
+name: Continuous Deployment # Pipeline that deploys code to AWS
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:  # Also allow manual trigger
+    branches: [ main ] # Triggers when code is pushed to main branch 
+  workflow_dispatch:  # Also allow manual trigger - useful for re-deploying without making a code change
 
 jobs:
   deploy:
     name: Deploy to AWS
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Fresh Ubuntu runner from GitHub
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6 # Downloads repo code onto the runner
       
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -24,12 +24,12 @@ jobs:
         with:
           node-version: '20'
       
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials # Authenticates the runner with AWS 
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} # Reads the access key from GitHub Secrets
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # Reads secret key from GitHub secrets. Both are never exposed in logs or code
+          aws-region: us-east-1 
       
       - name: Install CDK
         run: npm install -g aws-cdk
@@ -39,20 +39,21 @@ jobs:
           cd cdk-app
           pip install -r requirements.txt
       
-      - name: Build Lambda Layer
+      - name: Build Lambda Layer # LambdaStack references this folder so must be built before cdk deploy
         run: |
           mkdir -p lambda-layer/python
-          pip install --platform manylinux2014_x86_64 --only-binary=:all: --python-version 311 yfinance -t lambda-layer/python
+          pip install --platform manylinux2014_x86_64 --only-binary=:all: --python-version 311 yfinance -t lambda-layer/python 
       
-      - name: CDK Deploy
+      - name: CDK Deploy # Deploys everything to AWS in correct dependency order
         run: |
           cd cdk-app
           cdk deploy --all --require-approval never
       
-      - name: Verify deployment
+      - name: Verify deployment # After deployment, verifies the API and Dashboard are actually working
         run: |
           echo "Testing API health endpoint..."
           curl -f https://1hdrnjh4kl.execute-api.us-east-1.amazonaws.com/prod/health || exit 1
           echo "Testing dashboard..."
           curl -f https://dqdtse490mbv1.cloudfront.net || exit 1
           echo "Deployment verified successfully!"
+# CDK compares current state in AWS with the new code and only deploys changes. This is the step that takes code from source (GitHub) to end user (AWS)

@@ -2,25 +2,25 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop ] # Runs when code is pushed directly to these branches
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop ] # Runs when PR is opened targetting these branches. Develop branch is for integration testing before merging to main
 
-jobs:
+jobs: # 3 jobs: test, lint & cdk-synth
   test:
     name: Run Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # The VM this job will run on - hosted by GitHub
     
-    steps:
+    steps: # Runs sequentially 
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6 # Downloads repository code onto GitHub Actions runner
       
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version: '3.11' # Installs Python 3.11 on the runner
       
-      - name: Install test dependencies
+      - name: Install test dependencies # Python packages needed to run the tests
         run: |
           pip install pytest pytest-cov pytest-mock moto boto3
       
@@ -28,13 +28,13 @@ jobs:
         run: |
           cd tests
           pytest unit/ -v || echo "Some tests failed but continuing"
-        continue-on-error: true
+        continue-on-error: true # Runs all tests in unit/ folder
       
       - name: Run integration tests
         run: |
           cd tests
           pytest integration/ -v || echo "Some integration tests failed but continuing"
-        continue-on-error: true
+        continue-on-error: true # Runs all tests in integration/ folder
 
   lint:
     name: Lint Code
@@ -49,9 +49,9 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: Install linting tools
+      - name: Install linting tools # flake 8 - checks Python code style and formatting | bandit - security scanner that detects common vulnerabilities in Python code 
         run: |
-          pip install flake8 bandit
+          pip install flake8 bandit 
       
       - name: Run flake8
         run: |
@@ -63,7 +63,7 @@ jobs:
           bandit -r lambda/ cdk-app/cdk_app/ || echo "Security scan completed"
         continue-on-error: true
 
-  cdk-synth:
+  cdk-synth: # Validates the CDK infrastructure code 
     name: CDK Synth
     runs-on: ubuntu-latest
     
@@ -76,7 +76,7 @@ jobs:
         with:
           python-version: '3.11'
       
-      - name: Set up Node.js
+      - name: Set up Node.js # CDK CLI is built with Node.js so it needs Node to run
         uses: actions/setup-node@v3
         with:
           node-version: '20'
@@ -89,12 +89,14 @@ jobs:
           cd cdk-app
           pip install -r requirements.txt
       
-      - name: Build Lambda Layer
+      - name: Build Lambda Layer # Builds the Lambda layer containing the yfinance library and its dependencies
         run: |
           mkdir -p lambda-layer/python
           pip install --platform manylinux2014_x86_64 --only-binary=:all: --python-version 311 yfinance -t lambda-layer/python
       
-      - name: CDK Synth
+      - name: CDK Synth # Converts all 6 Python CDK stacks into CloudFormation JSON templates
         run: |
           cd cdk-app
           cdk synth
+# The final step validates that: all CDK code is syntactically correct; all resource definitions are valid; all stack dependencies are resolved; 
+# the Lambda layer folder exists and is accessible
