@@ -30,7 +30,7 @@ class StorageStack(Stack):
             ),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,  # On-demand pricing, pay per read/write
             point_in_time_recovery=True,  # Enable backups
-            removal_policy=RemovalPolicy.DESTROY,  # If the CDK stack gets deleted, the table gets deleted too  
+            removal_policy=RemovalPolicy.RETAIN,  # Keep table and data even if stack is destroyed
         )
 
         # Global Secondary Index for querying by date
@@ -74,6 +74,6 @@ class StorageStack(Stack):
                     expiration=Duration.days(30),  # Delete after 30 days
                 )
             ],
-            removal_policy=RemovalPolicy.DESTROY,  # Deletes bucket when stack is destroyed - for dev/testing
-            auto_delete_objects=True,  # Empties the bucket before deleting it
+            removal_policy=RemovalPolicy.RETAIN,  # Keep bucket and data even if stack is destroyed
+            auto_delete_objects=False,  # Don't empty the bucket on stack deletion
         )
