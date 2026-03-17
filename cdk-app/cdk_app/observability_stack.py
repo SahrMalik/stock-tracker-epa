@@ -71,10 +71,28 @@ class ObservabilityStack(Stack): # First stack to be deployed
         # Add initial widgets
         self.dashboard.add_widgets(
             cloudwatch.TextWidget(
-                markdown="# Stock Tracker Monitoring\n\nInitial dashboard - metrics will be added as components are deployed.",
+                markdown="# Stock Tracker Monitoring Dashboard",
                 width=24,
-                height=2,
+                height=1,
             )
+        )
+
+        # Lambda metrics
+        scanner_errors = cloudwatch.Metric(namespace="AWS/Lambda", metric_name="Errors", dimensions_map={"FunctionName": "stock-scanner"}, statistic="Sum", period=Duration.minutes(5))
+        scanner_invocations = cloudwatch.Metric(namespace="AWS/Lambda", metric_name="Invocations", dimensions_map={"FunctionName": "stock-scanner"}, statistic="Sum", period=Duration.minutes(5))
+        scanner_duration = cloudwatch.Metric(namespace="AWS/Lambda", metric_name="Duration", dimensions_map={"FunctionName": "stock-scanner"}, statistic="Average", period=Duration.minutes(5))
+        api_errors = cloudwatch.Metric(namespace="AWS/Lambda", metric_name="Errors", dimensions_map={"FunctionName": "stock-api-handler"}, statistic="Sum", period=Duration.minutes(5))
+        api_duration = cloudwatch.Metric(namespace="AWS/Lambda", metric_name="Duration", dimensions_map={"FunctionName": "stock-api-handler"}, statistic="Average", period=Duration.minutes(5))
+
+        self.dashboard.add_widgets(
+            cloudwatch.GraphWidget(title="Scanner Lambda Invocations", left=[scanner_invocations], width=8, height=6),
+            cloudwatch.GraphWidget(title="Scanner Lambda Errors", left=[scanner_errors], width=8, height=6),
+            cloudwatch.GraphWidget(title="Scanner Lambda Duration (ms)", left=[scanner_duration], width=8, height=6),
+        )
+
+        self.dashboard.add_widgets(
+            cloudwatch.GraphWidget(title="API Lambda Errors", left=[api_errors], width=12, height=6),
+            cloudwatch.GraphWidget(title="API Lambda Duration (ms)", left=[api_duration], width=12, height=6),
         )
 
         # CloudWatch Alarm for Pipeline Failures (placeholder)
