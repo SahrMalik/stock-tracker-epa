@@ -8,7 +8,7 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-class ApiStack(Stack):
+class ApiStack(Stack): # Fifth stack to be deployed. Depends on ObservabilityStack (CloudWatch log) & StorageStack (DynamoDB table)
     """
     CDK Stack for API Gateway.
     Week 6 Day 1: REST API for anomaly queries.

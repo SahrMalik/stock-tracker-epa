@@ -10,7 +10,7 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-class LambdaStack(Stack):
+class LambdaStack(Stack): # Fourth stack to be deployed. Depends on the first three foundation stacks
     """
     CDK Stack for Lambda function and EventBridge scheduling.
     Week 4: Serverless compute and scheduling.

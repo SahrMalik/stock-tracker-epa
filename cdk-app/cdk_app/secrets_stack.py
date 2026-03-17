@@ -6,7 +6,7 @@ from aws_cdk import (
 from constructs import Construct
 import json # For json formatting of secret values
 
-class SecretsStack(Stack):
+class SecretsStack(Stack): # Third stack to be deployed
     """
     CDK Stack for secrets and configuration management.
     Week 5 Day 2: Secrets Manager and Parameter Store.

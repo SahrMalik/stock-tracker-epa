@@ -221,9 +221,9 @@
 <body>
     <div class="container">
         <header>
-            <h1>🚨 Stock Anomaly Monitor</h1>
+            <h1>🚨 Stock Anomaly Monitor</h1> <!-- Page heading-->
             <p class="subtitle">
-                <span class="health-status" id="health-indicator"></span>
+                <span class="health-status" id="health-indicator"></span> <!-- targetted by JS to show green (healthy) or red (error)-->
                 Real-time monitoring of unusual stock market activity
             </p>
             <div class="detection-info">
@@ -244,64 +244,64 @@
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-label">Total Anomalies</div>
-                <div class="stat-value" id="total-anomalies">-</div>
+                <div class="stat-value" id="total-anomalies">-</div> <!--Targetted by JS to show update count dynamically-->
             </div>
             <div class="stat-card">
                 <div class="stat-label">Monitored Ticker</div>
-                <div class="stat-value" id="monitored-ticker">TSLA</div>
+                <div class="stat-value" id="monitored-ticker">TSLA</div> <!--Hardcoded TSLA here, if we update ticker in Parameter Store, we'd update this too-->
             </div>
             <div class="stat-card">
                 <div class="stat-label">Last Scan</div>
-                <div class="stat-value" id="last-scan" style="font-size: 1.2em;">-</div>
+                <div class="stat-value" id="last-scan" style="font-size: 1.2em;">-</div> <!--Updated by JS with the timestamp from the most recent anomaly-->
             </div>
         </div>
         
         <div class="anomalies-section">
             <h2 class="section-title">Recent Anomalies</h2>
-            <div id="anomalies-list" class="loading">
+            <div id="anomalies-list" class="loading"> <!--Container where JS will inject the anomaly table-->
                 Loading anomalies...
             </div>
         </div>
         
         <div class="last-updated">
-            Last updated: <span id="last-updated-time">-</span>
+            Last updated: <span id="last-updated-time">-</span> <!--Footer showing when the dashboard last fetched data from the API. Updated every 60 seconds with the current time-->
         </div>
     </div>
     
     <script>
-        const API_BASE_URL = 'https://1hdrnjh4kl.execute-api.us-east-1.amazonaws.com/prod';
+        const API_BASE_URL = 'https://1hdrnjh4kl.execute-api.us-east-1.amazonaws.com/prod'; // API Gateway endpoint URL - hardcoded because it doesn't change between deployments
         
         // Fetch and display anomalies
         async function fetchAnomalies() {
             try {
-                const response = await fetch(`${API_BASE_URL}/anomalies`);
-                const data = await response.json();
+                const response = await fetch(`${API_BASE_URL}/anomalies`); // HTTO GET request to the /anomalies endpoint
+                const data = await response.json(); // Parses JSON response body into a JS object 
                 
-                displayAnomalies(data.anomalies || []);
-                updateStats(data.anomalies || []);
-                updateHealthStatus(true);
+                displayAnomalies(data.anomalies || []); // Renders the anomaly table in the HTML
+                updateStats(data.anomalies || []); // Updates the stat cards (total count, last scan time)
+                updateHealthStatus(true); // Sets the health indicator dot to green
                 
             } catch (error) {
                 console.error('Error fetching anomalies:', error);
-                document.getElementById('anomalies-list').innerHTML = 
-                    '<div class="no-anomalies">❌ Error loading anomalies</div>';
-                updateHealthStatus(false);
+                document.getElementById('anomalies-list').innerHTML = // Logs the error to the browser console for debugging. Shows an error message on the dashboard
+                    '<div class="no-anomalies">❌ Error loading anomalies</div>'; 
+                updateHealthStatus(false); // Sets the health indicator dot to red
             }
             
-            updateLastUpdated();
+            updateLastUpdated(); // Updates last updated timestamp at the bottom of the page 
         }
         
         // Display anomalies
         function displayAnomalies(anomalies) {
-            const container = document.getElementById('anomalies-list');
+            const container = document.getElementById('anomalies-list'); // Takes the anomalies array from the API response. Will inject into HTML div with id="anomalies-list"
             
             if (anomalies.length === 0) {
                 container.innerHTML = '<div class="no-anomalies">✅ No anomalies detected</div>';
                 return;
-            }
+            } // If no anomalies, show message and exit func
             
-            container.innerHTML = anomalies.map(anomaly => `
-                <div class="anomaly-card ${anomaly.severity}">
+            container.innerHTML = anomalies.map(anomaly => ` 
+                <div class="anomaly-card ${anomaly.severity}"> 
                     <div class="anomaly-header">
                         <span class="ticker">${anomaly.ticker}</span>
                         <span class="severity ${anomaly.severity}">${anomaly.severity}</span>
@@ -316,16 +316,16 @@
                         <strong>Date:</strong> ${anomaly.date}
                     </div>
                 </div>
-            `).join('');
+            `).join(''); // Loops through every anomaly and transforms into a HTML card
         }
         
         // Update statistics
         function updateStats(anomalies) {
-            document.getElementById('total-anomalies').textContent = anomalies.length;
+            document.getElementById('total-anomalies').textContent = anomalies.length; // Updates the "Total Anomalies" stat card with the count
             
             if (anomalies.length > 0) {
                 const latestDate = anomalies[0].date;
-                document.getElementById('last-scan').textContent = latestDate;
+                document.getElementById('last-scan').textContent = latestDate; // Shows date of the latest anomaly detection
             }
         }
         
@@ -333,7 +333,7 @@
         function updateHealthStatus(healthy) {
             const indicator = document.getElementById('health-indicator');
             if (healthy) {
-                indicator.classList.remove('error');
+                indicator.classList.remove('error'); // If API call succeeded, remove the error CSS class -> dot shows green
             } else {
                 indicator.classList.add('error');
             }
@@ -341,7 +341,7 @@
         
         // Update last updated time
         function updateLastUpdated() {
-            const now = new Date().toLocaleString();
+            const now = new Date().toLocaleString(); // Gets current time, runs after every API call 
             document.getElementById('last-updated-time').textContent = now;
         }
         
@@ -353,10 +353,10 @@
             return '$' + value.toFixed(2);
         }
         
-        // Initial load
-        fetchAnomalies();
+        // Calls func immediately when the page loads
+        fetchAnomalies(); 
         
-        // Auto-refresh every 60 seconds
+        // Auto-refresh every 60 seconds, runs as long as the page is open. No need to manually refresh
         setInterval(fetchAnomalies, 60000);
     </script>
 </body>

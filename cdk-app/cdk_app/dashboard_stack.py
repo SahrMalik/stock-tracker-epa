@@ -9,7 +9,7 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-class DashboardStack(Stack):
+class DashboardStack(Stack): # Sixth stack to be deployed. Depends on ApiStack - needs the API endpoint URL to fetch data from 
     """
     CDK Stack for static dashboard hosting.
     Week 9 Day 1: S3 static website with CloudFront.
