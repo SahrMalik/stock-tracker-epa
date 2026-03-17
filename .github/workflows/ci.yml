@@ -22,19 +22,23 @@ jobs: # 3 jobs: test, lint & cdk-synth
       
       - name: Install test dependencies # Python packages needed to run the tests
         run: |
-          pip install pytest pytest-cov pytest-mock moto boto3
+          pip install pytest pytest-cov pytest-mock moto boto3 yfinance
       
       - name: Run unit tests
+        env:
+          AWS_DEFAULT_REGION: us-east-1 # Required for boto3 to initialise without real AWS credentials
         run: |
           cd tests
           pytest unit/ -v || echo "Some tests failed but continuing"
-        continue-on-error: true # Runs all tests in unit/ folder
+        continue-on-error: true
       
       - name: Run integration tests
+        env:
+          AWS_DEFAULT_REGION: us-east-1
         run: |
           cd tests
           pytest integration/ -v || echo "Some integration tests failed but continuing"
-        continue-on-error: true # Runs all tests in integration/ folder
+        continue-on-error: true
 
   lint:
     name: Lint Code
