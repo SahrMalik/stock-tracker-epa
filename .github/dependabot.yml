@@ -1,20 +1,20 @@
 version: 2
 updates:
-  # Python dependencies for Lambda
+  # Python dependencies for Lambda (yfinance)
   - package-ecosystem: "pip"
     directory: "/lambda"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
 
-  # Python dependencies for CDK
+  # Python dependencies for CDK (aws-cdk-lib, constructs)
   - package-ecosystem: "pip"
     directory: "/cdk-app"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
 
-  # GitHub Actions
+  # GitHub Actions (for ci.yml, cd.yml action versions e.g. actions/checkout@v6)
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
