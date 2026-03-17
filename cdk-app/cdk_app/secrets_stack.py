@@ -34,7 +34,7 @@ class SecretsStack(Stack): # Third stack to be deployed
         self.ticker_param = ssm.StringParameter(
             self, "TickerParameter",
             parameter_name="/stock-tracker/ticker", # The path in parameter store
-            string_value="TSLA", # Default value set in CDK 
+            string_value="AMZN", # Default value set in CDK 
             description="Stock ticker to monitor",
         )
 
