@@ -7,7 +7,7 @@ from aws_cdk import (
 )
 from constructs import Construct
 
-class StorageStack(Stack):
+class StorageStack(Stack): # Second stack to be deployed
     """
     CDK Stack for data storage infrastructure.
     Week 5: DynamoDB and S3 setup.

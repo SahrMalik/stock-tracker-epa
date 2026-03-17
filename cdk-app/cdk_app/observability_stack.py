@@ -13,14 +13,14 @@ from aws_cdk import (
 from constructs import Construct
 
 
-class ObservabilityStack(Stack):
+class ObservabilityStack(Stack): # First stack to be deployed
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
         # CloudWatch Log Groups
         self.lambda_log_group = logs.LogGroup(
             self,
-            "LambdaLogGroup",
+            "LambdaLogGroup", # CDK logical ID - used internally by CloudFormation to track this resource
             log_group_name="/aws/lambda/stock-scanner", # AWS Lambda automatically sends logs to a log group with this naming pattern
             retention=logs.RetentionDays.ONE_WEEK, # Logs auto-delete after 7 days
             removal_policy=RemovalPolicy.DESTROY, # Deletes log group when stack is destroyed
