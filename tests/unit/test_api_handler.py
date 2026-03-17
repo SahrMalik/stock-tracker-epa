@@ -32,6 +32,9 @@ class TestAPIHandler:
             ],
             BillingMode='PAY_PER_REQUEST' # On-demand billing same as production
         )
+        # Patch the api_handler's table to use the mock table
+        import api_handler
+        api_handler.table = self.table
     
     def test_health_endpoint(self): # Tests that the health check endpoint works correctly. Same endpoint the CD pipeline calls to verify deployment
         """Test /health endpoint."""
