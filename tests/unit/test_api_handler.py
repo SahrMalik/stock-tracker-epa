@@ -69,7 +69,7 @@ class TestAPIHandler:
         """Test getting anomalies with data."""
         # Add test data
         self.table.put_item(Item={
-            'ticker': 'TSLA',
+            'ticker': 'AMZN',
             'timestamp': '2026-02-18T10:00:00',
             'anomaly_type': 'price',
             'z_score': Decimal('2.5'),

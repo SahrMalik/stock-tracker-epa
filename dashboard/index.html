@@ -248,7 +248,7 @@
             </div>
             <div class="stat-card">
                 <div class="stat-label">Monitored Ticker</div>
-                <div class="stat-value" id="monitored-ticker">AMZN</div> <!--Hardcoded TSLA here, if we update ticker in Parameter Store, we'd update this too-->
+                <div class="stat-value" id="monitored-ticker">AMZN</div> <!--Hardcoded AMZN here, if we update ticker in Parameter Store, we'd update this too-->
             </div>
             <div class="stat-card">
                 <div class="stat-label">Last Scan</div>
@@ -274,7 +274,7 @@
         // Fetch and display anomalies
         async function fetchAnomalies() {
             try {
-                const response = await fetch(`${API_BASE_URL}/anomalies`); // HTTO GET request to the /anomalies endpoint
+                const response = await fetch(`${API_BASE_URL}/anomalies`); // HTTP GET request to the /anomalies endpoint
                 const data = await response.json(); // Parses JSON response body into a JS object 
                 
                 displayAnomalies(data.anomalies || []); // Renders the anomaly table in the HTML

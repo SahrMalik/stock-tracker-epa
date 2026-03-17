@@ -10,7 +10,7 @@ logger.setLevel(logging.INFO) # Sets log level to INFO - logs appear in CloudWat
 dynamodb = boto3.resource('dynamodb') # Creates a DynamoDB resource client 
 table = dynamodb.Table('stock-anomalies') # References the DynamoDB table by name 
 
-def lambda_handler(event, context): # Enrey point - AWS Lambda calls this function for every API request
+def lambda_handler(event, context): # Entry point - AWS Lambda calls this function for every API request
     """
     API handler for anomaly queries.
     Supports:

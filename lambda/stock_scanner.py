@@ -42,7 +42,7 @@ def lambda_handler(event, context): # Event - Data from EventBridge (trigger inf
         }) # Logs the start of execution with current UTC timestamp and triggger event to CloudWatch
         
         # Get configuration from Parameter Store with retry
-        ticker = get_parameter_with_retry('/stock-tracker/ticker', 'TSLA') # Reads the stock ticker from Parameter store. Falls back to TSLA if Parameter store is unreachable
+        ticker = get_parameter_with_retry('/stock-tracker/ticker', 'AMZN') # Reads the stock ticker from Parameter store. Falls back to AMZN if Parameter store is unreachable
         threshold = float(get_parameter_with_retry('/stock-tracker/anomaly-threshold', '2.0')) # Reads the Z-score threshold from Parameter Store. Converts string to float. Falls back to 2.0
         
         logger.info(f"Configuration: ticker={ticker}, threshold={threshold}") # Logs the loaded config for debugging
