@@ -28,7 +28,7 @@ circuit_breaker = {
     'failures': 0,
     'last_failure_time': None,
     'state': 'closed'  # closed, open, half_open
-} # System starts as closed. If 3 consecutive failures -> switches to open - stops calling Yahoo Finance. Switches to hald open after 60 seconds
+} # System starts as closed. If 3 consecutive failures -> switches to open - stops calling Yahoo Finance. Switches to half open after 60 seconds
 
 def lambda_handler(event, context): # Event - Data from EventBridge (trigger info). Context - Lambda metadata (request ID, time remaining)
     """
@@ -156,7 +156,7 @@ def get_parameter_with_retry(name, default): # Reads a value from Parameter Stor
     def fetch():
         try:
             response = ssm.get_parameter(Name=name)
-            return response['Parameter']['Value'] # Calls AWS parameter store and extracts the value (e.g. TSLA or 2.0)
+            return response['Parameter']['Value'] # Calls AWS parameter store and extracts the value (e.g. AMZN or 2.0)
         except Exception as e:
             logger.warning(f"Failed to get parameter {name}: {str(e)}") 
             raise # If the call fails, logs a warning and re-raises so retry_with_backoff can retry it
