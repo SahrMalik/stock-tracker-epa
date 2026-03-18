@@ -42,7 +42,7 @@ class SecretsStack(Stack): # Third stack to be deployed
         self.threshold_param = ssm.StringParameter(
             self, "ThresholdParameter",
             parameter_name="/stock-tracker/anomaly-threshold", # Path in parameter store
-            string_value="1.5",  # Z-score threshold
+            string_value="1.0",  # Z-score threshold
             description="Z-score threshold for anomaly detection",
         )
 
