@@ -13,7 +13,7 @@ jobs: # 3 jobs: test, lint & cdk-synth
     
     steps: # Runs sequentially 
       - name: Checkout code
-        uses: actions/checkout@v6 # Downloads repository code onto GitHub Actions runner
+        uses: actions/checkout@v7 # Downloads repository code onto GitHub Actions runner
       
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -46,7 +46,7 @@ jobs: # 3 jobs: test, lint & cdk-synth
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -73,7 +73,7 @@ jobs: # 3 jobs: test, lint & cdk-synth
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       
       - name: Set up Python
         uses: actions/setup-python@v6

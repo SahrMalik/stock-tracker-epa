@@ -16,7 +16,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6 # Downloads repo code onto the runner
+        uses: actions/checkout@v7 # Downloads repo code onto the runner
       
       - name: Set up Python
         uses: actions/setup-python@v6
